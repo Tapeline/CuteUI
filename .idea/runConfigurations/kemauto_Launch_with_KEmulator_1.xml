@@ -1,0 +1,14 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Launch &quot;Cute UI Test&quot; with KEmulator" type="Application" factoryName="Application">
+    <option name="ALTERNATIVE_JRE_PATH" value="1.8 CLDC Runtime" />
+    <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
+    <option name="MAIN_CLASS_NAME" value="emulator.Emulator" />
+    <module name="CuteUI" />
+    <option name="PROGRAM_PARAMETERS" value="-cp &quot;$PROJECT_DIR$/build/preverified&quot; -midlet &quot;me.tapeline.cuteui.test.CuteUITest&quot; -jad &quot;$PROJECT_DIR$/MANIFEST.MF&quot; -uei" />
+    <option name="VM_PARAMETERS" value="-XX:+IgnoreUnrecognizedVMOptions -Djna.nosys=true -Dfile.encoding=UTF-8 -XstartOnFirstThread" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/../../../../Programs/kemnnx64" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

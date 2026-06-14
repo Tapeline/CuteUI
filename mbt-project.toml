@@ -1,0 +1,26 @@
+name = "CuteUITest"
+
+
+[assets]
+src = [
+    "src/**/*.java"
+]
+res = [
+    "res/*:.",
+    "res/**/*:.",
+]
+manifest = "MANIFEST.MF"
+
+
+[build]
+output_dir = "build"
+bootclasspath = [
+    "lib/cldc*.jar",
+    "lib/midp*.jar",
+]
+
+
+[libs]
+[libs.nokia-platform-libs]
+glob = "lib/**.jar"
+include = false
