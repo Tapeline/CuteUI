@@ -1,6 +1,7 @@
 package me.tapeline.cuteui.components;
 
 import me.tapeline.cuteui.Consts;
+import me.tapeline.cuteui.UI;
 
 import javax.microedition.lcdui.Graphics;
 
@@ -26,6 +27,8 @@ public abstract class Component {
     private boolean enabled = true;
 
     private Component parent = null;
+
+    public void tick() {}
 
     public abstract void measure(int maxW, int maxH);
 

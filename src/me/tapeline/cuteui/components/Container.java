@@ -19,6 +19,11 @@ public abstract class Container extends Component {
         setLayout(layout);
     }
 
+    public void tick() {
+        for (int i = 0; i < childrenCount; i++)
+            children[i].tick();
+    }
+
     public void measure(int maxW, int maxH) {
         layout.measure(this, Math.max(maxW, getMaxW()), Math.max(maxH, getMaxH()));
     }

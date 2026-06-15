@@ -1,7 +1,10 @@
 package me.tapeline.cuteui.components;
 
+import me.tapeline.cuteui.Consts;
+
 import javax.microedition.lcdui.Font;
 import javax.microedition.lcdui.Graphics;
+import java.util.Vector;
 
 public class Label extends Component {
 
@@ -9,6 +12,7 @@ public class Label extends Component {
     private Font font;
     private int color;
     private String[] renderLines = null;
+    private int alignment = Consts.ALIGN_LEFT;
 
     public Label(String text) {
         this.text = text;
@@ -17,6 +21,8 @@ public class Label extends Component {
     }
 
     public void measure(int maxW, int maxH) {
+        // Some slop based on my older algorithm of line-wrapping
+
         if (text == null || text.length() == 0) {
             renderLines = new String[0];
             int h = font.getHeight();
@@ -30,10 +36,9 @@ public class Label extends Component {
         char[] chars = text.toCharArray();
         int measuredW = 0;
         int fontHeight = font.getHeight();
-        java.util.Vector linesVector = new java.util.Vector();
+        Vector linesVector = new Vector();
 
         if (maxW == -1) {
-            // UNBOUNDED WIDTH: No automatic wrapping, only wrap on explicit '\n'
             int lineStart = 0;
             for (int i = 0; i < chars.length; i++) {
                 if (chars[i] == '\n') {
@@ -43,7 +48,6 @@ public class Label extends Component {
                     lineStart = i + 1;
                 }
             }
-            // Add the remaining text after the last '\n'
             int len = chars.length - lineStart;
             if (len > 0 || chars[chars.length - 1] == '\n') {
                 int lw = font.charsWidth(chars, lineStart, len);
@@ -52,7 +56,6 @@ public class Label extends Component {
             }
 
         } else {
-            // BOUNDED WIDTH: Support word wrapping and explicit '\n'
             maxW -= 2 * (getMargin() + getPadding());
             int lineStart = 0;
             int currentW = 0;
@@ -73,27 +76,22 @@ public class Label extends Component {
 
                     int cw = font.charWidth(chars[i]);
 
-                    // Check if adding this character exceeds maxW
                     if (currentW + cw > maxW && i > lineStart) {
                         if (lastSpace > lineStart) {
-                            // Word wrap: break at the last space found on this line
                             int lw = font.charsWidth(chars, lineStart, lastSpace - lineStart);
                             if (lw > measuredW) measuredW = lw;
                             linesVector.addElement(new String(chars, lineStart, lastSpace - lineStart));
 
                             lineStart = lastSpace + 1;
 
-                            // Skip any subsequent consecutive spaces to prevent empty lines
                             while (lineStart < chars.length && chars[lineStart] == ' ') {
                                 lineStart++;
                             }
 
-                            // Step back so the loop increments naturally to the next character
                             i = lineStart - 1;
                             currentW = 0;
                             lastSpace = -1;
                         } else {
-                            // Character wrap: word is too long, forced break before the current character
                             int lw = font.charsWidth(chars, lineStart, i - lineStart);
                             if (lw > measuredW) measuredW = lw;
                             linesVector.addElement(new String(chars, lineStart, i - lineStart));
@@ -106,7 +104,7 @@ public class Label extends Component {
                     }
                 }
             }
-            // Add the final line
+
             int len = chars.length - lineStart;
             if (len > 0 || chars[chars.length - 1] == '\n') {
                 int lw = font.charsWidth(chars, lineStart, len);
@@ -114,22 +112,19 @@ public class Label extends Component {
                 linesVector.addElement(new String(chars, lineStart, len));
             }
 
-            // Constrain the measured width securely to max width
             if (measuredW > maxW) {
                 measuredW = maxW;
             }
         }
 
-        // Store generated strings into the field for the paint method
         renderLines = new String[linesVector.size()];
         for (int i = 0; i < linesVector.size(); i++) {
             renderLines[i] = (String) linesVector.elementAt(i);
         }
 
-        // Calculate final height depending on the size of the renderLines array
         int measuredH = renderLines.length * fontHeight + (getMargin() + getPadding()) * 2;
         if (maxH != -1 && measuredH > maxH) {
-            measuredH = maxH; // Clip if it overflows height bound constraint
+            measuredH = maxH;
         }
 
         setMeasurementResult(measuredW, measuredH);
@@ -138,11 +133,21 @@ public class Label extends Component {
     public void paint(Graphics g) {
         if (renderLines == null) return;
         g.setColor(color);
-        int x = getPadding() + getMargin() + getRectX();
-        int y = getPadding() + getMargin() + getRectY();
         int fh = font.getHeight();
+        int y = getPadding() + getMargin() + getRectY();
+        int x, anchor;
+        if (alignment == Consts.ALIGN_CENTER) {
+            x = getRectX() + getRectW() / 2;
+            anchor = Graphics.TOP | Graphics.HCENTER;
+        } else if (alignment == Consts.ALIGN_RIGHT) {
+            x = getRectX() + getRectW();
+            anchor = Graphics.TOP | Graphics.RIGHT;
+        } else {
+            x = getPadding() + getMargin() + getRectX();
+            anchor = Graphics.TOP | Graphics.LEFT;
+        }
         for (int i = 0; i < renderLines.length; i++) {
-            g.drawString(renderLines[i], x, y, Graphics.TOP | Graphics.LEFT);
+            g.drawString(renderLines[i], x, y, anchor);
             y += fh;
         }
         markPaintValid();
@@ -172,6 +177,15 @@ public class Label extends Component {
 
     public void setColor(int color) {
         this.color = color;
+        invalidatePaint();
+    }
+
+    public int getAlignment() {
+        return alignment;
+    }
+
+    public void setAlignment(int alignment) {
+        this.alignment = alignment;
         invalidatePaint();
     }
 

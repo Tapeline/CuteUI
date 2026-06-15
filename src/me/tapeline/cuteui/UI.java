@@ -39,6 +39,7 @@ public class UI extends Canvas implements Runnable {
     public void run() {
         while (running) {
             if (root != null) {
+                root.tick();
                 if (!root.isLayoutValid()) {
                     root.setMinW(getWidth());
                     root.setMinH(getHeight());
@@ -49,8 +50,7 @@ public class UI extends Canvas implements Runnable {
                     root.layout();
                 }
                 if (!root.isPaintValid()) {
-                    repaint();
-                    serviceRepaints();
+                    forceRepaint();
                 }
             }
             try {
@@ -58,6 +58,11 @@ public class UI extends Canvas implements Runnable {
             } catch (InterruptedException ignored) {
             }
         }
+    }
+
+    public void forceRepaint() {
+        repaint();
+        serviceRepaints();
     }
 
     protected void sizeChanged(int w, int h) {

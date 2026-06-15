@@ -1,6 +1,8 @@
 package me.tapeline.cuteui.test;
 
+import me.tapeline.cuteui.Consts;
 import me.tapeline.cuteui.UI;
+import me.tapeline.cuteui.components.Button;
 import me.tapeline.cuteui.components.Label;
 import me.tapeline.cuteui.components.Panel;
 import me.tapeline.cuteui.components.VScrollPanel;
@@ -45,6 +47,24 @@ public class CuteUITest extends MIDlet {
         l2.setFont(Font.getFont(Font.FACE_MONOSPACE, Font.STYLE_PLAIN, Font.SIZE_LARGE));
         l2.setColor(0xFF00FF);
         a.addChild(l2);
+        Label lc = new Label("This is a centered label with some text");
+        lc.setAlignment(Consts.ALIGN_CENTER);
+        Label lr = new Label("This is a right-aligned label with some text");
+        lr.setAlignment(Consts.ALIGN_RIGHT);
+        a.addChild(lc);
+        a.addChild(lr);
+        a.addChild(new Button("This is a button", 0));
+        a.addChild(new Label("This is another label"));
+        a.addChild(new Label("This is another label"));
+        a.addChild(new Label("This is another label"));
+        a.addChild(new Label("This is another label"));
+        a.addChild(new Label("This is another label"));
+        a.addChild(new Label("This is another label"));
+        a.addChild(new Label("This is another label"));
+        a.addChild(new Label("This is another label"));
+        a.addChild(new Label("This is another label"));
+        a.addChild(new Label("This is another label"));
+        a.addChild(new Label("This is another label"));
         a.addChild(new Label("This is another label"));
         a.addChild(new Label("This is another label"));
         a.addChild(new Label("This is another label"));
