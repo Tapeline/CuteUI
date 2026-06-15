@@ -3,6 +3,7 @@ package me.tapeline.cuteui.test;
 import me.tapeline.cuteui.UI;
 import me.tapeline.cuteui.components.Label;
 import me.tapeline.cuteui.components.Panel;
+import me.tapeline.cuteui.components.VScrollPanel;
 import me.tapeline.cuteui.layout.HLayout;
 import me.tapeline.cuteui.layout.VLayout;
 
@@ -15,9 +16,9 @@ public class CuteUITest extends MIDlet {
 
     public CuteUITest() {
         UI.start();
-        Panel a = new Panel(new VLayout(4));
-        a.setMargin(4);
-        a.setPadding(16);
+        Panel a = new VScrollPanel(new VLayout(4));
+        a.setMargin(16);
+        a.setPadding(4);
         Panel b = new Panel(new HLayout(4));
         b.setBackgroundColor(0xEEEEEE);
         b.setPadding(4);
@@ -29,9 +30,10 @@ public class CuteUITest extends MIDlet {
         c.addChild(new Label("Hello again"));
         c.addChild(new Label("This is the\nmiddle panel"));
         Label l = new Label("This is a label with paddings and margins. Click me") {
-            public void pointerPressed(int x, int y) {
+            public boolean pointerPressed(int x, int y) {
                 if (getPadding() != 0) setPadding(0);
                 else setPadding(4);
+                return true;
             }
         };
         l.setPadding(4);
@@ -43,6 +45,10 @@ public class CuteUITest extends MIDlet {
         l2.setFont(Font.getFont(Font.FACE_MONOSPACE, Font.STYLE_PLAIN, Font.SIZE_LARGE));
         l2.setColor(0xFF00FF);
         a.addChild(l2);
+        a.addChild(new Label("This is another label"));
+        a.addChild(new Label("This is another label"));
+        a.addChild(new Label("This is another label"));
+        a.addChild(new Label("This is another label"));
         a.addChild(new Label("This is another label"));
         UI.instance.setRoot(a);
     }

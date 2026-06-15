@@ -34,22 +34,28 @@ public abstract class Component {
 
     public abstract void paint(Graphics g);
 
-    public void keyPressed(int key) {
+    public boolean keyPressed(int key) {
+        return false;
     }
 
-    public void keyReleased(int key) {
+    public boolean keyReleased(int key) {
+        return false;
     }
 
-    public void keyHeld(int key) {
+    public boolean keyHeld(int key) {
+        return false;
     }
 
-    public void pointerPressed(int x, int y) {
+    public boolean pointerPressed(int x, int y) {
+        return false;
     }
 
-    public void pointerReleased(int x, int y) {
+    public boolean pointerReleased(int x, int y) {
+        return false;
     }
 
-    public void pointerDragged(int x, int y) {
+    public boolean pointerDragged(int x, int y) {
+        return false;
     }
 
     public void invalidateLayout() {

@@ -21,8 +21,19 @@ public class Panel extends Container {
         markPaintValid();
     }
 
+    /**
+     * Children's rectangles are stored in coordinates relative to this panel's
+     * origin (see {@link me.tapeline.cuteui.layout.Layout}). A child is visible
+     * iff its rectangle intersects the panel's inner (content) area, expressed
+     * in the same local coordinate system: [0, getRectW()) x [0, getRectH()).
+     */
     public boolean isChildVisible(Component c) {
-        return c.getRectX() <= getRectW() && c.getRectY() <= getRectH();
+        int cx = c.getRectX();
+        int cy = c.getRectY();
+        int cw = c.getRectW();
+        int ch = c.getRectH();
+        return cx + cw > 0 && cy + ch > 0 &&
+               cx < getRectW() && cy < getRectH();
     }
 
     public int getBackgroundColor() {
@@ -33,43 +44,50 @@ public class Panel extends Container {
         this.backgroundColor = backgroundColor;
     }
 
-    public void pointerPressed(int x, int y) {
-        if (!isPointerEventTransparent()) return;
-        x -= getRectX();
-        y -= getRectY();
+    public boolean pointerPressed(int x, int y) {
+        if (!isPointerEventTransparent()) return false;
+        // Translate to local (child) coordinate space.
+        int lx = x - getRectX();
+        int ly = y - getRectY();
         Component c;
-        for (int i = 0; i < getChildrenCount(); i++) {
+        for (int i = getChildrenCount() - 1; i >= 0; i--) {
             c = getChildAt(i);
-            if (c.getRectX() <= x && x <= c.getRectX() + c.getRectW() &&
-                c.getRectY() <= y && y <= c.getRectY() + c.getRectH())
-                c.pointerPressed(x, y);
+            if (c.getRectX() <= lx && lx <= c.getRectX() + c.getRectW() &&
+                c.getRectY() <= ly && ly <= c.getRectY() + c.getRectH()) {
+                if (c.pointerPressed(lx, ly)) return true;
+            }
         }
+        return false;
     }
 
-    public void pointerReleased(int x, int y) {
-        if (!isPointerEventTransparent()) return;
-        x -= getRectX();
-        y -= getRectY();
+    public boolean pointerReleased(int x, int y) {
+        if (!isPointerEventTransparent()) return false;
+        int lx = x - getRectX();
+        int ly = y - getRectY();
         Component c;
-        for (int i = 0; i < getChildrenCount(); i++) {
+        for (int i = getChildrenCount() - 1; i >= 0; i--) {
             c = getChildAt(i);
-            if (c.getRectX() <= x && x <= c.getRectX() + getRectW() &&
-                c.getRectY() <= y && y <= c.getRectY() + getRectH())
-                c.pointerReleased(x, y);
+            if (c.getRectX() <= lx && lx <= c.getRectX() + c.getRectW() &&
+                c.getRectY() <= ly && ly <= c.getRectY() + c.getRectH()) {
+                if (c.pointerReleased(lx, ly)) return true;
+            }
         }
+        return false;
     }
 
-    public void pointerDragged(int x, int y) {
-        if (!isPointerEventTransparent()) return;
-        x -= getRectX();
-        y -= getRectY();
+    public boolean pointerDragged(int x, int y) {
+        if (!isPointerEventTransparent()) return false;
+        int lx = x - getRectX();
+        int ly = y - getRectY();
         Component c;
-        for (int i = 0; i < getChildrenCount(); i++) {
+        for (int i = getChildrenCount() - 1; i >= 0; i--) {
             c = getChildAt(i);
-            if (c.getRectX() <= x && x <= c.getRectX() + getRectW() &&
-                c.getRectY() <= y && y <= c.getRectY() + getRectH())
-                c.pointerDragged(x, y);
+            if (c.getRectX() <= lx && lx <= c.getRectX() + c.getRectW() &&
+                c.getRectY() <= ly && ly <= c.getRectY() + c.getRectH()) {
+                if (c.pointerDragged(lx, ly)) return true;
+            }
         }
+        return false;
     }
 
 }

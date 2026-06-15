@@ -47,6 +47,8 @@ public class UI extends Canvas implements Runnable {
                     root.measure(getWidth(), getHeight());
                     root.setCalculatedRect(0, 0, getWidth(), getHeight());
                     root.layout();
+                }
+                if (!root.isPaintValid()) {
                     repaint();
                     serviceRepaints();
                 }

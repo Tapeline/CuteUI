@@ -3,6 +3,7 @@ package me.tapeline.cuteui.components;
 import me.tapeline.cuteui.layout.Layout;
 
 import javax.microedition.lcdui.Graphics;
+import javax.microedition.lcdui.Image;
 
 public abstract class Container extends Component {
 
@@ -34,8 +35,23 @@ public abstract class Container extends Component {
 
     public void paint(Graphics g) {
         paintSelf(g);
+        paintChildren(g);
+    }
+
+    protected void paintChildren(Graphics g) {
+        int cx = g.getClipX();
+        int cy = g.getClipY();
+        int cw = g.getClipWidth();
+        int ch = g.getClipHeight();
         int tx = getRectX();
         int ty = getRectY();
+        int inset = getMargin() + getPadding();
+        g.clipRect(
+            getRectX() + inset,
+            getRectY() + inset,
+            getRectW() - 2 * inset,
+            getRectH() - 2 * inset
+        );
         g.translate(tx, ty);
         for (int i = 0; i < childrenCount; i++) {
             if (isChildVisible(children[i])) {
@@ -43,6 +59,7 @@ public abstract class Container extends Component {
             }
         }
         g.translate(-tx, -ty);
+        g.setClip(cx, cy, cw, ch);
     }
 
     public void setLayout(Layout layout) {
@@ -123,22 +140,28 @@ public abstract class Container extends Component {
         this.pointerEventTransparent = pointerEventTransparent;
     }
 
-    public void keyPressed(int key) {
-        if (!keyEventTransparent) return;
+    public boolean keyPressed(int key) {
+        if (!keyEventTransparent) return false;
+        boolean handled = false;
         for (int i = 0; i < getChildrenCount(); i++)
-            getChildAt(i).keyPressed(key);
+            handled = handled || getChildAt(i).keyPressed(key);
+        return handled;
     }
 
-    public void keyReleased(int key) {
-        if (!keyEventTransparent) return;
+    public boolean keyReleased(int key) {
+        if (!keyEventTransparent) return false;
+        boolean handled = false;
         for (int i = 0; i < getChildrenCount(); i++)
-            getChildAt(i).keyReleased(key);
+            handled = handled || getChildAt(i).keyReleased(key);
+        return handled;
     }
 
-    public void keyHeld(int key) {
-        if (!keyEventTransparent) return;
+    public boolean keyHeld(int key) {
+        if (!keyEventTransparent) return false;
+        boolean handled = false;
         for (int i = 0; i < getChildrenCount(); i++)
-            getChildAt(i).keyHeld(key);
+            handled = handled || getChildAt(i).keyHeld(key);
+        return handled;
     }
 
 }

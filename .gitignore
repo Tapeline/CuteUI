@@ -32,3 +32,4 @@ lib
 build.env
 proguard.jar
 build
+javadoc
