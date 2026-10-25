@@ -1,27 +1,33 @@
 package me.tapeline.cuteui.components;
 
+import me.tapeline.cuteui.EMath;
+import me.tapeline.cuteui.Event;
 import me.tapeline.cuteui.layout.Layout;
 
 import javax.microedition.lcdui.Graphics;
 
 public class VScrollPanel extends Panel {
 
-    private static final int SCROLL_THRESHOLD = 4;
-    private static final int FRICTION_NUM = 236;
-    private static final int MIN_FLING_VELOCITY_Q8 = 64;
-    private static final int MAX_FLING_VELOCITY_Q8 = 80 * 256;
+	private static final byte IDLE = 0;
+	private static final byte TOUCHING = 1;
+	private static final byte SCROLLING = 2;
+	private static final byte FORWARDING = 3;
+	private static final byte KEEPING_MOMENTUM = 4;
+	
+	private static final double FRICTION_COEFF = 0.7;
+	private static final double STOP_MARGIN = 0.01;
 
-    private int yScroll = 0;
     private int handleColor = 0x333333;
 
-    private boolean isTouching = false;
-    private boolean isScrolling = false;
-    private int pressX, pressY;
+    private int yScroll = 0;
+    private byte state = IDLE;
+    private int lastX;
     private int lastY;
-    private long lastDragMs;
-
-    private int velocityQ8 = 0;
-    private int subPixelQ8 = 0;
+    private long lastMs;
+	private double instantSpeed = 0.0;
+	
+	private double currentSpeed = 0.0;
+	private long lastTickMs;
 
     public VScrollPanel(Layout layout) {
         super(layout);
@@ -32,6 +38,7 @@ public class VScrollPanel extends Panel {
         paintSelf(g);
         paintChildren(g);
         paintHandle(g);
+		if (DEBUG) paintDebug(g);
         markPaintValid();
     }
 
@@ -65,109 +72,139 @@ public class VScrollPanel extends Panel {
     }
 
     protected void paintHandle(Graphics g) {
-        int fullH = getRectH() - 2 * getMargin();
-        int vpPercentage = getRectH() * 1000 / getMeasuredH();
-        int handleH = vpPercentage * fullH / 1000;
-        int handleY = yScroll * vpPercentage / 1000 + getRectY() + getMargin();
+        int viewportH = getRectH() - 2 * getMargin();
+		int measuredH = getMeasuredH() - 2 * getMargin();
+        int viewportPercent = viewportH * 1000 / measuredH;
+        int handleH = viewportPercent * viewportH / 1000;
+        int handleY = yScroll * viewportPercent / 1000 + getRectY() + getMargin();
         g.setColor(handleColor);
-        g.fillRect(
+        g.fillRoundRect(
             getRectX() + getRectW() - getMargin() - 4,
-            handleY ,
-            4, handleH
+            handleY,
+            4,
+            handleH,
+            2,
+            2
         );
     }
+	
+	protected void paintDebug(Graphics g) {
+		g.drawString(Double.toString(instantSpeed), 10, 10, Graphics.TOP | Graphics.LEFT);
+		g.drawString(Integer.toString(state), 10, 20, Graphics.TOP | Graphics.LEFT);
+		g.drawString(Double.toString(currentSpeed), 10, 30, Graphics.TOP | Graphics.LEFT);
+	}
 
-    public boolean pointerPressed(int x, int y) {
-        velocityQ8 = 0;
-        subPixelQ8 = 0;
-        pressX = x;
-        pressY = y;
+    public byte pointerPressed(int x, int y) {
+        lastX = x;
         lastY = y;
-        lastDragMs = System.currentTimeMillis();
-        isTouching = true;
-        isScrolling = false;
-        return true;
+		lastMs = System.currentTimeMillis();
+		state = TOUCHING;
+        return super.pointerPressed(x, y + yScroll);
     }
 
-    public boolean pointerReleased(int x, int y) {
-        if (!isTouching) return false;
-        isTouching = false;
-        if (isScrolling) {
-            if (velocityQ8 > MAX_FLING_VELOCITY_Q8) velocityQ8 = MAX_FLING_VELOCITY_Q8;
-            if (velocityQ8 < -MAX_FLING_VELOCITY_Q8) velocityQ8 = -MAX_FLING_VELOCITY_Q8;
-            isScrolling = false;
-            return true;
-        }
-        int sx = pressX;
-        int sy = pressY + yScroll;
-        boolean handled = super.pointerPressed(sx, sy);
-        handled = super.pointerReleased(sx, sy) || handled;
-        return handled;
+    public byte pointerReleased(int x, int y) {
+        if (state == SCROLLING) {
+			currentSpeed = instantSpeed;
+			state = KEEPING_MOMENTUM;
+            return Event.CONSUMED;
+        } else {
+    		state = IDLE;
+            lastX = x;
+            lastY = y;
+	        return super.pointerReleased(x, y + yScroll);
+		}
     }
 
-    public boolean pointerDragged(int x, int y) {
-        if (!isTouching) return false;
-        int dy = y - lastY;
-
-        if (!isScrolling) {
-            if (Math.abs(y - pressY) < SCROLL_THRESHOLD &&
-                Math.abs(x - pressX) < SCROLL_THRESHOLD) {
-                return true;
-            }
-            isScrolling = true;
+    public byte pointerDragged(int x, int y) {
+		long ms = System.currentTimeMillis();
+		
+		if (state == FORWARDING) {
+            lastX = x;
+            lastY = y;
+            return super.pointerDragged(x, y + yScroll);
         }
-
-        setScroll(yScroll - dy);
-        long now = System.currentTimeMillis();
-        long dt = now - lastDragMs;
-        if (dt <= 0) dt = 1;
-        // px/ms -> px/tick = (px/ms) * TICK_MS. UI.TICK_MS == 20.
-        int instVelQ8 = (int) (((long) -dy * 256 * 20) / dt);
-        velocityQ8 = (velocityQ8 * 3 + instVelQ8) >> 2;
-        lastY = y;
-        lastDragMs = now;
-        return true;
+			
+		if (state == TOUCHING) {
+			// do we, or our children scroll?
+			if (super.pointerDragged(lastX, lastY + yScroll) == Event.CONSUMED) {
+				state = FORWARDING;
+                lastX = x;
+                lastY = y;
+				return Event.CONSUMED;
+			} else {
+				state = SCROLLING;
+				int lx = x - getRectX();
+				int ly = y - getRectY();
+                Component child;
+				for (int i = 0; i < getChildrenCount(); i++) {
+                    child = getChildAt(i);
+                    if (lastX >= child.getRectX() && lastX <= child.getRectX() + child.getRectW() &&
+                        lastY + yScroll >= child.getRectY() && lastY + yScroll <= child.getRectY() + child.getRectH())
+                        getChildAt(i).pointerReleasedOutside(lx, ly);
+				}
+			}
+		}
+		
+		if (state == SCROLLING) {
+	        int dy = y - lastY;
+			double dt = ms - lastMs;
+	        int scrollCode = setScroll(yScroll - dy);
+			instantSpeed = ((double) dy) / dt;
+            lastX = x;
+            lastY = y;
+			lastMs = System.currentTimeMillis();
+	        return Event.CONSUMED;
+		}
+		
+        return Event.IGNORED;
     }
 
     public void tick() {
-        super.tick();
-        if (isTouching || velocityQ8 == 0) return;
-
-        subPixelQ8 += velocityQ8;
-        int dy = subPixelQ8 >> 8;
-        subPixelQ8 -= dy << 8;
-
-        int before = yScroll;
-        if (dy != 0) setScroll(yScroll + dy);
-
-        if (yScroll == before && dy != 0) {
-            velocityQ8 = 0;
-            subPixelQ8 = 0;
-            return;
-        }
-
-        velocityQ8 = (velocityQ8 * FRICTION_NUM) >> 8;
-        if (velocityQ8 < MIN_FLING_VELOCITY_Q8 && velocityQ8 > -MIN_FLING_VELOCITY_Q8) {
-            velocityQ8 = 0;
-            subPixelQ8 = 0;
-        }
+        if (state == KEEPING_MOMENTUM) {
+			long ms = System.currentTimeMillis();
+			System.out.println(ms - lastMs);
+			if (ms - lastMs > 100) {
+				lastMs = ms;
+				return;
+			}
+			int dy = (int) ((long) (currentSpeed * ((double) ms - lastMs)));
+			if (setScroll(yScroll - dy) != 0) {
+                currentSpeed = 0;
+                state = IDLE;
+                return;
+            }
+			currentSpeed = currentSpeed * FRICTION_COEFF;
+			if (Math.abs(currentSpeed) < 0.01) {
+				currentSpeed = 0;
+				state = IDLE;
+			}
+		}
     }
 
     public int getScroll() {
         return yScroll;
     }
 
-    public void setScroll(int yScroll) {
+    public int setScroll(int yScroll) {
         int inset = getMargin() + getPadding();
         int innerH = getRectH() - 2 * inset;
         int contentH = getMeasuredH() - 2 * inset;
         int maxScroll = contentH - innerH;
         if (maxScroll < 0) maxScroll = 0;
-        if (yScroll < 0) yScroll = 0;
-        if (yScroll > maxScroll) yScroll = maxScroll;
-        if (this.yScroll == yScroll) return;
+		int code = 0;
+        if (yScroll < 0) {
+			yScroll = 0;
+			code = -1;
+		}
+        if (yScroll > maxScroll) {
+			yScroll = maxScroll; 
+			code = 1;
+		}
+        if (this.yScroll == yScroll)
+			return code;
         this.yScroll = yScroll;
         invalidatePaint();
+		return code;
     }
 
     public int getHandleColor() {

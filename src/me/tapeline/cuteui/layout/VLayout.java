@@ -1,6 +1,5 @@
 package me.tapeline.cuteui.layout;
 
-import me.tapeline.cuteui.Consts;
 import me.tapeline.cuteui.components.Component;
 import me.tapeline.cuteui.components.Container;
 
@@ -24,7 +23,7 @@ public class VLayout implements Layout {
         Component child;
         for (int i = 0; i < childrenCount; i++) {
             child = c.getChildAt(i);
-            child.measure(childMaxW, Consts.UNDEFINED);
+            child.measure(childMaxW, -1);
             w = Math.max(w, child.getMeasuredW());
             h += child.getMeasuredH();
         }

@@ -1,5 +1,6 @@
 package me.tapeline.cuteui.components;
 
+import me.tapeline.cuteui.Event;
 import me.tapeline.cuteui.layout.Layout;
 
 import javax.microedition.lcdui.Graphics;
@@ -9,8 +10,6 @@ public abstract class Container extends Component {
 
     private static final int INITIAL_SIZE = 5;
 
-    private boolean keyEventTransparent = true;
-    private boolean pointerEventTransparent = true;
     private Layout layout;
     private Component[] children = new Component[INITIAL_SIZE];
     private int childrenCount = 0;
@@ -25,7 +24,7 @@ public abstract class Container extends Component {
     }
 
     public void measure(int maxW, int maxH) {
-        layout.measure(this, Math.max(maxW, getMaxW()), Math.max(maxH, getMaxH()));
+        layout.measure(this, maxW, maxH);
     }
 
     public void layout() {
@@ -71,6 +70,7 @@ public abstract class Container extends Component {
         if (layout == null)
             throw new IllegalArgumentException("layout is null");
         this.layout = layout;
+		invalidateLayout();
     }
 
     public Layout getLayout() {
@@ -127,46 +127,62 @@ public abstract class Container extends Component {
     public Component getChildAt(int i) {
         if (i >= childrenCount) return null;
         return children[i];
+	}
+
+    public byte keyPressed(int key) {
+        byte status = Event.IGNORED;
+		byte childStatus = Event.IGNORED;
+        for (int i = 0; i < getChildrenCount(); i++) {
+            childStatus = getChildAt(i).keyPressed(key);
+			if (childStatus == Event.CONSUMED)
+				return Event.CONSUMED;
+			else if (childStatus > status)
+				status = childStatus;
+		}
+        return status;
     }
 
-    public boolean isKeyEventTransparent() {
-        return keyEventTransparent;
+    public byte keyReleased(int key) {
+	    byte status = Event.IGNORED;
+		byte childStatus = Event.IGNORED;
+	    for (int i = 0; i < getChildrenCount(); i++) {
+	        childStatus = getChildAt(i).keyReleased(key);
+			if (childStatus == Event.CONSUMED)
+				return Event.CONSUMED;
+			else if (childStatus > status)
+				status = childStatus;
+		}
+	    return status;
     }
 
-    public void setKeyEventTransparent(boolean keyEventTransparent) {
-        this.keyEventTransparent = keyEventTransparent;
+    public byte keyHeld(int key) {
+	    byte status = Event.IGNORED;
+		byte childStatus = Event.IGNORED;
+	    for (int i = 0; i < getChildrenCount(); i++) {
+	        childStatus = getChildAt(i).keyHeld(key);
+			if (childStatus == Event.CONSUMED)
+				return Event.CONSUMED;
+			else if (childStatus > status)
+				status = childStatus;
+		}
+	    return status;
     }
-
-    public boolean isPointerEventTransparent() {
-        return pointerEventTransparent;
-    }
-
-    public void setPointerEventTransparent(boolean pointerEventTransparent) {
-        this.pointerEventTransparent = pointerEventTransparent;
-    }
-
-    public boolean keyPressed(int key) {
-        if (!keyEventTransparent) return false;
-        boolean handled = false;
-        for (int i = 0; i < getChildrenCount(); i++)
-            handled = handled || getChildAt(i).keyPressed(key);
-        return handled;
-    }
-
-    public boolean keyReleased(int key) {
-        if (!keyEventTransparent) return false;
-        boolean handled = false;
-        for (int i = 0; i < getChildrenCount(); i++)
-            handled = handled || getChildAt(i).keyReleased(key);
-        return handled;
-    }
-
-    public boolean keyHeld(int key) {
-        if (!keyEventTransparent) return false;
-        boolean handled = false;
-        for (int i = 0; i < getChildrenCount(); i++)
-            handled = handled || getChildAt(i).keyHeld(key);
-        return handled;
-    }
+	
+	public void onShow() {
+		for (int i = 0; i < getChildrenCount(); i++)
+			getChildAt(i).onShow();
+	}
+	
+	public void onHide() {
+		for (int i = 0; i < getChildrenCount(); i++)
+			getChildAt(i).onHide();
+	}
+	
+	public void onDestroy() {
+		for (int i = 0; i < getChildrenCount(); i++)
+			getChildAt(i).onDestroy();
+		children = null;
+		layout = null;
+	}
 
 }

@@ -1,25 +1,33 @@
 package me.tapeline.cuteui.components;
 
-import me.tapeline.cuteui.Consts;
-
 import javax.microedition.lcdui.Font;
 import javax.microedition.lcdui.Graphics;
 import java.util.Vector;
 
 public class Label extends Component {
 
+	public static short ALIGN_LEFT = 1;
+	public static short ALIGN_CENTER = 2;
+	public static short ALIGN_RIGHT = 3;
+
     private String text;
     private Font font;
     private int color;
     private String[] renderLines = null;
-    private int alignment = Consts.ALIGN_LEFT;
+    private int alignment = ALIGN_LEFT;
 
     public Label(String text) {
         this.text = text;
         this.font = Font.getDefaultFont();
         this.color = 0x000000;
     }
-
+	
+	public Label(String text, Font font, int color) {
+		this.text = text;
+		this.font = font;
+		this.color = color;
+	}
+	
     public void measure(int maxW, int maxH) {
         // Some slop based on my older algorithm of line-wrapping
 
@@ -131,15 +139,21 @@ public class Label extends Component {
     }
 
     public void paint(Graphics g) {
+        paintLines(g, 0);
+        markLayoutValid();
+        markPaintValid();
+    }
+
+    protected void paintLines(Graphics g, int tint) {
         if (renderLines == null) return;
-        g.setColor(color);
+        g.setColor(color - tint);
         int fh = font.getHeight();
         int y = getPadding() + getMargin() + getRectY();
         int x, anchor;
-        if (alignment == Consts.ALIGN_CENTER) {
+        if (alignment == ALIGN_CENTER) {
             x = getRectX() + getRectW() / 2;
             anchor = Graphics.TOP | Graphics.HCENTER;
-        } else if (alignment == Consts.ALIGN_RIGHT) {
+        } else if (alignment == ALIGN_RIGHT) {
             x = getRectX() + getRectW();
             anchor = Graphics.TOP | Graphics.RIGHT;
         } else {
@@ -150,7 +164,6 @@ public class Label extends Component {
             g.drawString(renderLines[i], x, y, anchor);
             y += fh;
         }
-        markPaintValid();
     }
 
     public String getText() {

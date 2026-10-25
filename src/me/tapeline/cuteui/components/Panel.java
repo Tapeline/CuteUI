@@ -1,5 +1,6 @@
 package me.tapeline.cuteui.components;
 
+import me.tapeline.cuteui.Event;
 import me.tapeline.cuteui.layout.Layout;
 
 import javax.microedition.lcdui.Graphics;
@@ -7,6 +8,7 @@ import javax.microedition.lcdui.Graphics;
 public class Panel extends Container {
 
     private int backgroundColor = 0xFFFFFF;
+	private int lastX, lastY;
 
     public Panel(Layout layout) {
         super(layout);
@@ -44,50 +46,74 @@ public class Panel extends Container {
         this.backgroundColor = backgroundColor;
     }
 
-    public boolean pointerPressed(int x, int y) {
-        if (!isPointerEventTransparent()) return false;
-        // Translate to local (child) coordinate space.
+    public byte pointerPressed(int x, int y) {
         int lx = x - getRectX();
         int ly = y - getRectY();
+		lastX = lx;
+		lastY = ly;
+		byte status = Event.IGNORED;
+		byte childStatus = Event.IGNORED;
         Component c;
         for (int i = getChildrenCount() - 1; i >= 0; i--) {
             c = getChildAt(i);
             if (c.getRectX() <= lx && lx <= c.getRectX() + c.getRectW() &&
                 c.getRectY() <= ly && ly <= c.getRectY() + c.getRectH()) {
-                if (c.pointerPressed(lx, ly)) return true;
+                childStatus = c.pointerPressed(lx, ly);
+				if (childStatus == Event.CONSUMED) 
+					return Event.CONSUMED;
+				else if (childStatus > status)
+					status = childStatus;
             }
         }
-        return false;
+        return status;
     }
 
-    public boolean pointerReleased(int x, int y) {
-        if (!isPointerEventTransparent()) return false;
-        int lx = x - getRectX();
-        int ly = y - getRectY();
-        Component c;
-        for (int i = getChildrenCount() - 1; i >= 0; i--) {
-            c = getChildAt(i);
-            if (c.getRectX() <= lx && lx <= c.getRectX() + c.getRectW() &&
-                c.getRectY() <= ly && ly <= c.getRectY() + c.getRectH()) {
-                if (c.pointerReleased(lx, ly)) return true;
-            }
-        }
-        return false;
+    public byte pointerReleased(int x, int y) {
+	    int lx = x - getRectX();
+	    int ly = y - getRectY();
+		lastX = lx;
+		lastY = ly;
+		byte status = Event.IGNORED;
+		byte childStatus = Event.IGNORED;
+	    Component c;
+	    for (int i = getChildrenCount() - 1; i >= 0; i--) {
+	        c = getChildAt(i);
+	        if (c.getRectX() <= lx && lx <= c.getRectX() + c.getRectW() &&
+	            c.getRectY() <= ly && ly <= c.getRectY() + c.getRectH()) {
+	            childStatus = c.pointerReleased(lx, ly);
+				if (childStatus == Event.CONSUMED) 
+					return Event.CONSUMED;
+				else if (childStatus > status)
+					status = childStatus;
+	        }
+	    }
+	    return status;
     }
 
-    public boolean pointerDragged(int x, int y) {
-        if (!isPointerEventTransparent()) return false;
+    public byte pointerDragged(int x, int y) {
         int lx = x - getRectX();
         int ly = y - getRectY();
+		byte status = Event.IGNORED;
+		byte childStatus = Event.IGNORED;
         Component c;
         for (int i = getChildrenCount() - 1; i >= 0; i--) {
             c = getChildAt(i);
             if (c.getRectX() <= lx && lx <= c.getRectX() + c.getRectW() &&
                 c.getRectY() <= ly && ly <= c.getRectY() + c.getRectH()) {
-                if (c.pointerDragged(lx, ly)) return true;
-            }
+				if (status != Event.CONSUMED) {
+		            childStatus = c.pointerDragged(lx, ly);
+					if (childStatus > status)
+						status = childStatus;
+				}
+            } else if (c.getRectX() <= lastX && lastX <= c.getRectX() + c.getRectW() &&
+                c.getRectY() <= lastY && lastY <= c.getRectY() + c.getRectH()) {
+				c.pointerDragged(lx, ly);
+				c.pointerReleasedOutside(lx, ly);
+			}
         }
-        return false;
+		lastX = lx;
+		lastY = ly;
+        return status;
     }
 
 }

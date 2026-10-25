@@ -1,16 +1,13 @@
 package me.tapeline.cuteui.components;
 
-import me.tapeline.cuteui.Consts;
 import me.tapeline.cuteui.UI;
+import me.tapeline.cuteui.Event;
 
 import javax.microedition.lcdui.Graphics;
 
 public abstract class Component {
 
-    private int minW = Consts.UNDEFINED;
-    private int minH = Consts.UNDEFINED;
-    private int maxW = Consts.UNDEFINED;
-    private int maxH = Consts.UNDEFINED;
+	public static boolean DEBUG = false;
 
     // Maybe split into 4?
     private int padding = 0;
@@ -23,43 +20,95 @@ public abstract class Component {
     private boolean layoutValid = false;
     private boolean paintValid = false;
 
-    private boolean focused = false;
-    private boolean enabled = true;
-
     private Component parent = null;
+	
+	/*
+	The UI loop will once per several tens of milliseconds:
+	- trigger tick() on the root
+	- if the root does not have a valid layout:
+		- measure with display WH
+		- layout
+	- if the root does not have a valid paint or was re-laid out:
+		- repaint
+	It is the root component's responsibility to forward these
+	calls down the chain.
+	*/
 
     public void tick() {}
-
     public abstract void measure(int maxW, int maxH);
-
-    public void layout() {
-    }
-
+    public void layout() {}
     public abstract void paint(Graphics g);
+	
+	/*
+	By design, specific events must always follow other.
+	CuteUI guarantees that:
+	
+	- Any X KEY PRESS will always be followed by X KEY RELEASE,
+	maybe having 0 or more X KEY HELD in between them.
+	
+	- Any XY POINTER PRESS will always be followed by any X'Y' 
+	POINTER RELEASE, maybe having 0 or more any X'Y' POINTER DRAG
+	in between them. 
+	
+	When a pointer goes out of the component's rect, UI will
+	complement POINTER PRESS and POINTER DRAG events with a 
+	POINTER RELEASED OUTSIDE event, thus closing the pointer sequence.
+	
+	POINTER RELEASED OUTSIDE event has a "cancelling" nature,
+	it should be primarily used for canceling actions that may have
+	had been triggered with POINTER PRESS or POINTER DRAG.
+	
+	A button example:
+	POINTER PRESS -> state = PRESSED
+	POINTER RELEASE -> state = NORMAL, trigger action
+	POINTER RELEASE OUTSIDE -> state = NORMAL  // no trigger!
+	
+	Without POINTER RELEASE OUTSIDE, if the user presses a button
+	and then drags the finger off, it wouldn't know that it is
+	not touched anymore and will live in PRESSED state.
+	*/
 
-    public boolean keyPressed(int key) {
-        return false;
+    public byte keyPressed(int key) {
+        return Event.IGNORED;
     }
 
-    public boolean keyReleased(int key) {
-        return false;
+    public byte keyReleased(int key) {
+        return Event.IGNORED;
     }
 
-    public boolean keyHeld(int key) {
-        return false;
+    public byte keyHeld(int key) {
+        return Event.IGNORED;
     }
 
-    public boolean pointerPressed(int x, int y) {
-        return false;
+    public byte pointerPressed(int x, int y) {
+        return Event.IGNORED;
     }
 
-    public boolean pointerReleased(int x, int y) {
-        return false;
+    public byte pointerReleased(int x, int y) {
+        return Event.IGNORED;
     }
 
-    public boolean pointerDragged(int x, int y) {
-        return false;
+    public byte pointerDragged(int x, int y) {
+        return Event.IGNORED;
     }
+	
+    public byte pointerReleasedOutside(int x, int y) {
+        return Event.IGNORED;
+    }
+	
+	/*
+	Layout and paint invalidation, when possible,
+	will always invalidate the whole hierarchy up to the top
+	so that the root knows it needs recalculations and repaints.
+	
+	When you make a change to a component such that it may
+	affect its SIZING or POSITION on the screen, 
+	invalidate the layout.
+	
+	When you make a change to a component such that it may 
+	affect its APPEARANCE but NOT the sizing or the position,
+	invalidate only the paint.
+	*/
 
     public void invalidateLayout() {
         layoutValid = false;
@@ -71,6 +120,30 @@ public abstract class Component {
         paintValid = false;
         if (parent != null) parent.invalidatePaint();
     }
+	
+    public boolean isLayoutValid() {
+        return layoutValid;
+    }
+
+    public boolean isPaintValid() {
+        return paintValid;
+    }
+
+    public void markLayoutValid() {
+        layoutValid = true;
+    }
+
+    public void markPaintValid() {
+        paintValid = true;
+    }
+	
+	/*
+	setCalculatedRect(int, int, int, int) should only be called 
+	by a Layout.
+	setMeasurementResult(int, int) should only be called by
+	a Layout or this component during measure() method.
+	Using it from other places may result in UI misbehaviour.
+	*/
 
     public void setMeasurementResult(int w, int h) {
         measuredW = w;
@@ -107,65 +180,19 @@ public abstract class Component {
     public int getRectH() {
         return rectH;
     }
-
-    public boolean isLayoutValid() {
-        return layoutValid;
-    }
-
-    public boolean isPaintValid() {
-        return paintValid;
-    }
-
-    public void markLayoutValid() {
-        layoutValid = true;
-    }
-
-    public void markPaintValid() {
-        paintValid = true;
-    }
+	
+	/*
+	setParent(Component) should only be called by Container
+	that is the actual parent of this component.
+	Other usage may result in UI misbehaviour.
+	*/
 
     public Component getParent() {
         return parent;
     }
 
-    public void setParent(Component parent) {
+    protected void setParent(Component parent) {
         this.parent = parent;
-    }
-
-    public int getMinW() {
-        return minW;
-    }
-
-    public void setMinW(int minW) {
-        this.minW = minW;
-        invalidateLayout();
-    }
-
-    public int getMinH() {
-        return minH;
-    }
-
-    public void setMinH(int minH) {
-        this.minH = minH;
-        invalidateLayout();
-    }
-
-    public int getMaxW() {
-        return maxW;
-    }
-
-    public void setMaxW(int maxW) {
-        this.maxW = maxW;
-        invalidateLayout();
-    }
-
-    public int getMaxH() {
-        return maxH;
-    }
-
-    public void setMaxH(int maxH) {
-        this.maxH = maxH;
-        invalidateLayout();
     }
 
     public int getPadding() {
@@ -185,23 +212,9 @@ public abstract class Component {
         this.margin = margin;
         invalidateLayout();
     }
-
-    public boolean isFocused() {
-        return focused;
-    }
-
-    public void setFocused(boolean focused) {
-        this.focused = focused;
-        invalidatePaint();
-    }
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public void setEnabled(boolean enabled) {
-        this.enabled = enabled;
-        invalidatePaint();
-    }
+	
+	public void onShow() {}
+	public void onHide() {}
+	public void onDestroy() {}
 
 }

@@ -1,6 +1,5 @@
 package me.tapeline.cuteui.layout;
 
-import me.tapeline.cuteui.Consts;
 import me.tapeline.cuteui.components.Component;
 import me.tapeline.cuteui.components.Container;
 
@@ -21,11 +20,11 @@ public class HLayout implements Layout {
         int h = 0;
         int childrenCount = c.getChildrenCount();
         int childMaxH = maxH - (c.getMargin() + c.getPadding()) * 2;
-        if (maxH == Consts.UNDEFINED) childMaxH = Consts.UNDEFINED;
+        if (maxH == -1) childMaxH = -1;
         Component child;
         for (int i = 0; i < childrenCount; i++) {
             child = c.getChildAt(i);
-            child.measure(Consts.UNDEFINED, childMaxH);
+            child.measure(-1, childMaxH);
             w += child.getMeasuredW();
             h = Math.max(child.getMeasuredH(), h);
         }

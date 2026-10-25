@@ -41,10 +41,6 @@ public class UI extends Canvas implements Runnable {
             if (root != null) {
                 root.tick();
                 if (!root.isLayoutValid()) {
-                    root.setMinW(getWidth());
-                    root.setMinH(getHeight());
-                    root.setMaxW(getWidth());
-                    root.setMaxH(getHeight());
                     root.measure(getWidth(), getHeight());
                     root.setCalculatedRect(0, 0, getWidth(), getHeight());
                     root.layout();

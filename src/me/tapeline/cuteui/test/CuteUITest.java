@@ -1,11 +1,8 @@
 package me.tapeline.cuteui.test;
 
-import me.tapeline.cuteui.Consts;
 import me.tapeline.cuteui.UI;
-import me.tapeline.cuteui.components.Button;
-import me.tapeline.cuteui.components.Label;
-import me.tapeline.cuteui.components.Panel;
-import me.tapeline.cuteui.components.VScrollPanel;
+import me.tapeline.cuteui.Event;
+import me.tapeline.cuteui.components.*;
 import me.tapeline.cuteui.layout.HLayout;
 import me.tapeline.cuteui.layout.VLayout;
 
@@ -32,10 +29,10 @@ public class CuteUITest extends MIDlet {
         c.addChild(new Label("Hello again"));
         c.addChild(new Label("This is the\nmiddle panel"));
         Label l = new Label("This is a label with paddings and margins. Click me") {
-            public boolean pointerPressed(int x, int y) {
+            public byte pointerPressed(int x, int y) {
                 if (getPadding() != 0) setPadding(0);
                 else setPadding(4);
-                return true;
+                return Event.CONSUMED;
             }
         };
         l.setPadding(4);
@@ -48,12 +45,18 @@ public class CuteUITest extends MIDlet {
         l2.setColor(0xFF00FF);
         a.addChild(l2);
         Label lc = new Label("This is a centered label with some text");
-        lc.setAlignment(Consts.ALIGN_CENTER);
+        lc.setAlignment(Label.ALIGN_CENTER);
         Label lr = new Label("This is a right-aligned label with some text");
-        lr.setAlignment(Consts.ALIGN_RIGHT);
+        lr.setAlignment(Label.ALIGN_RIGHT);
         a.addChild(lc);
         a.addChild(lr);
-        a.addChild(new Button("This is a button", 0));
+        Button btn = new Button("This is a button", 0);
+        a.addChild(btn);
+        btn.setListener(new CommandListener() {
+            public void onCommand(int command) {
+                Component.DEBUG = !Component.DEBUG;
+            }
+        });
         a.addChild(new Label("This is another label"));
         a.addChild(new Label("This is another label"));
         a.addChild(new Label("This is another label"));

@@ -1,67 +1,57 @@
 package me.tapeline.cuteui.components;
 
-import me.tapeline.cuteui.Consts;
+import me.tapeline.cuteui.Event;
 
 import javax.microedition.lcdui.Graphics;
 
 public class Button extends Label {
 
     private int command;
-    private boolean pressed = false;
+    protected boolean pressed = false;
     private CommandListener listener = null;
 
-    private int passiveBackground = 0x444444;
-    private int activeBackground = 0x1144EE;
-    private int cornerRadius = 16;
-
-    private long releaseMs = 0;
+    private int baseBackground = 0x121212;
+    private int baseBorder = 0x484848;
+    private int tint = 0x0F0F0F;
+    private int cornerRadius = 8;
 
     public Button(String text, int command) {
         super(text);
         this.command = command;
         setColor(0xFCFCFC);
-        setAlignment(Consts.ALIGN_CENTER);
+        setAlignment(Label.ALIGN_CENTER);
         setPadding(2);
     }
 
-    public void tick() {
-        if (releaseMs < 0) return;
-        if (System.currentTimeMillis() > releaseMs) {
-            releaseMs = -1;
-            pressed = false;
-            invalidatePaint();
-        }
-    }
-
     public void paint(Graphics g) {
-        if (pressed) {
-            g.setColor(activeBackground);
-        } else {
-            g.setColor(passiveBackground);
-        }
-        g.fillRoundRect(
-            getRectX() + getMargin(),
-            getRectY() + getMargin(),
-            getRectW() - 4 * getMargin(),
-            getRectH() - 4 * getMargin(),
-            cornerRadius,
-            cornerRadius
-        );
-        super.paint(g);
+        g.setColor(pressed ? baseBackground - tint : baseBackground);
+        int xs = getRectX() + getMargin();
+        int ys = getRectY() + getMargin();
+        int cw = getRectW() - 2 * getMargin();
+        int ch = getRectH() - 2 * getMargin();
+        g.fillRoundRect(xs, ys, cw, ch, cornerRadius, cornerRadius);
+        g.setColor(pressed ? baseBorder - tint : baseBorder);
+        g.drawRoundRect(xs, ys, cw, ch, cornerRadius, cornerRadius);
+        paintLines(g, pressed ? tint : 0);
     }
 
-    public boolean pointerPressed(int x, int y) {
+    public byte pointerPressed(int x, int y) {
         pressed = true;
-        // kinda sketchy, fix later
-        releaseMs = System.currentTimeMillis() + 100;
         invalidatePaint();
-        return true;
+        return Event.CONSUMED;
     }
 
-    public boolean pointerReleased(int x, int y) {
+    public byte pointerReleased(int x, int y) {
+        pressed = false;
         invalidatePaint();
         if (listener != null) listener.onCommand(command);
-        return true;
+        return Event.CONSUMED;
+    }
+
+    public byte pointerReleasedOutside(int x, int y) {
+        pressed = false;
+        invalidatePaint();
+        return Event.CONSUMED;
     }
 
     public int getCommand() {
@@ -78,24 +68,6 @@ public class Button extends Label {
 
     public void setListener(CommandListener listener) {
         this.listener = listener;
-    }
-
-    public int getPassiveBackground() {
-        return passiveBackground;
-    }
-
-    public void setPassiveBackground(int passiveBackground) {
-        this.passiveBackground = passiveBackground;
-        invalidatePaint();
-    }
-
-    public int getActiveBackground() {
-        return activeBackground;
-    }
-
-    public void setActiveBackground(int activeBackground) {
-        this.activeBackground = activeBackground;
-        invalidatePaint();
     }
 
     public int getCornerRadius() {
