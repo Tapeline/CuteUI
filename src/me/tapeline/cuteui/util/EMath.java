@@ -1,4 +1,4 @@
-package me.tapeline.cuteui;
+package me.tapeline.cuteui.util;
 
 public class EMath {
 

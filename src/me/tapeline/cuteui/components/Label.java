@@ -19,7 +19,7 @@ public class Label extends Component {
     public Label(String text) {
         this.text = text;
         this.font = Font.getDefaultFont();
-        this.color = 0x000000;
+        this.color = 0xFFFFFF;
     }
 	
 	public Label(String text, Font font, int color) {

@@ -1,4 +1,4 @@
-package me.tapeline.cuteui;
+package me.tapeline.cuteui.core;
 
 public final class Event {
 

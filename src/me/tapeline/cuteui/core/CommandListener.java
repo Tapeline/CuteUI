@@ -1,4 +1,4 @@
-package me.tapeline.cuteui.components;
+package me.tapeline.cuteui.core;
 
 public interface CommandListener {
 

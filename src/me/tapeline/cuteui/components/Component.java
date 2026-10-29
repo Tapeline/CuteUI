@@ -1,7 +1,6 @@
 package me.tapeline.cuteui.components;
 
-import me.tapeline.cuteui.UI;
-import me.tapeline.cuteui.Event;
+import me.tapeline.cuteui.core.Event;
 
 import javax.microedition.lcdui.Graphics;
 
@@ -34,7 +33,7 @@ public abstract class Component {
 	calls down the chain.
 	*/
 
-    public void tick() {}
+    public void tick(long t) {}
     public abstract void measure(int maxW, int maxH);
     public void layout() {}
     public abstract void paint(Graphics g);

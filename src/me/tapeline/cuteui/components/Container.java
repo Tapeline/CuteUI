@@ -1,10 +1,9 @@
 package me.tapeline.cuteui.components;
 
-import me.tapeline.cuteui.Event;
+import me.tapeline.cuteui.core.Event;
 import me.tapeline.cuteui.layout.Layout;
 
 import javax.microedition.lcdui.Graphics;
-import javax.microedition.lcdui.Image;
 
 public abstract class Container extends Component {
 
@@ -18,9 +17,9 @@ public abstract class Container extends Component {
         setLayout(layout);
     }
 
-    public void tick() {
+    public void tick(long t) {
         for (int i = 0; i < childrenCount; i++)
-            children[i].tick();
+            children[i].tick(t);
     }
 
     public void measure(int maxW, int maxH) {

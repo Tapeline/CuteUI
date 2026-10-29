@@ -1,8 +1,9 @@
 package me.tapeline.cuteui.test;
 
-import me.tapeline.cuteui.UI;
-import me.tapeline.cuteui.Event;
+import me.tapeline.cuteui.core.UI;
+import me.tapeline.cuteui.core.Event;
 import me.tapeline.cuteui.components.*;
+import me.tapeline.cuteui.core.CommandListener;
 import me.tapeline.cuteui.layout.HLayout;
 import me.tapeline.cuteui.layout.VLayout;
 
@@ -15,16 +16,16 @@ public class CuteUITest extends MIDlet {
 
     public CuteUITest() {
         UI.start();
-        Panel a = new VScrollPanel(new VLayout(4));
+        ScrollPanel a = ScrollPanel.verticalOfGap(4);
         a.setMargin(16);
         a.setPadding(4);
         Panel b = new Panel(new HLayout(4));
-        b.setBackgroundColor(0xEEEEEE);
+        b.setBackgroundColor(0x222222);
         b.setPadding(4);
         b.addChild(new Label("Hello"));
         b.addChild(new Label("This is the\nupper panel"));
         Panel c = new Panel(new VLayout(4));
-        c.setBackgroundColor(0xEEEEEE);
+        c.setBackgroundColor(0x222222);
         c.setPadding(4);
         c.addChild(new Label("Hello again"));
         c.addChild(new Label("This is the\nmiddle panel"));

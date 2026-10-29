@@ -1,13 +1,13 @@
 package me.tapeline.cuteui.components;
 
-import me.tapeline.cuteui.Event;
+import me.tapeline.cuteui.core.Event;
 import me.tapeline.cuteui.layout.Layout;
 
 import javax.microedition.lcdui.Graphics;
 
 public class Panel extends Container {
 
-    private int backgroundColor = 0xFFFFFF;
+    private int backgroundColor = 0x000000;
 	private int lastX, lastY;
 
     public Panel(Layout layout) {
@@ -59,7 +59,7 @@ public class Panel extends Container {
             if (c.getRectX() <= lx && lx <= c.getRectX() + c.getRectW() &&
                 c.getRectY() <= ly && ly <= c.getRectY() + c.getRectH()) {
                 childStatus = c.pointerPressed(lx, ly);
-				if (childStatus == Event.CONSUMED) 
+				if (childStatus == Event.CONSUMED)
 					return Event.CONSUMED;
 				else if (childStatus > status)
 					status = childStatus;
@@ -81,7 +81,7 @@ public class Panel extends Container {
 	        if (c.getRectX() <= lx && lx <= c.getRectX() + c.getRectW() &&
 	            c.getRectY() <= ly && ly <= c.getRectY() + c.getRectH()) {
 	            childStatus = c.pointerReleased(lx, ly);
-				if (childStatus == Event.CONSUMED) 
+				if (childStatus == Event.CONSUMED)
 					return Event.CONSUMED;
 				else if (childStatus > status)
 					status = childStatus;

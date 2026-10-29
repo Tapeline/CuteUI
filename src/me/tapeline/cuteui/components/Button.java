@@ -1,6 +1,7 @@
 package me.tapeline.cuteui.components;
 
-import me.tapeline.cuteui.Event;
+import me.tapeline.cuteui.core.Event;
+import me.tapeline.cuteui.core.CommandListener;
 
 import javax.microedition.lcdui.Graphics;
 
@@ -10,17 +11,17 @@ public class Button extends Label {
     protected boolean pressed = false;
     private CommandListener listener = null;
 
-    private int baseBackground = 0x121212;
+    private int baseBackground = 0x242424;
     private int baseBorder = 0x484848;
-    private int tint = 0x0F0F0F;
-    private int cornerRadius = 8;
+    private int tint = 0x202020;
+    private int cornerRadius = 16;
 
     public Button(String text, int command) {
         super(text);
         this.command = command;
         setColor(0xFCFCFC);
         setAlignment(Label.ALIGN_CENTER);
-        setPadding(2);
+        setPadding(4);
     }
 
     public void paint(Graphics g) {

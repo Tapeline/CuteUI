@@ -1,4 +1,4 @@
-package me.tapeline.cuteui;
+package me.tapeline.cuteui.core;
 
 import me.tapeline.cuteui.components.Component;
 
@@ -9,12 +9,23 @@ import java.lang.Thread;
 
 public class UI extends Canvas implements Runnable {
 
-    private static final int TICK_MS = 20;
-
-    private int backplateColor = 0xCCCCCC;
+    private int backplateColor = 0x000000;
     private Component root;
+    private int tickMs = 20;
 
     public static UI instance = null;
+
+    public void setFps(int fps) {
+        tickMs = 1000 / fps;
+    }
+
+    public int getFps() {
+        return 1000 / tickMs;
+    }
+
+    public int getTickMs() {
+        return tickMs;
+    }
 
     public static void start() {
         instance = new UI();
@@ -37,9 +48,12 @@ public class UI extends Canvas implements Runnable {
     private Thread thread = null;
 
     public void run() {
+        long t, lastT;
+        lastT = System.currentTimeMillis();
         while (running) {
+            t = System.currentTimeMillis();
             if (root != null) {
-                root.tick();
+                root.tick(t);
                 if (!root.isLayoutValid()) {
                     root.measure(getWidth(), getHeight());
                     root.setCalculatedRect(0, 0, getWidth(), getHeight());
@@ -49,20 +63,28 @@ public class UI extends Canvas implements Runnable {
                     forceRepaint();
                 }
             }
-            try {
-                Thread.sleep(TICK_MS);
+            long adj = System.currentTimeMillis() - lastT;
+            lastT = t;
+            if (adj >= tickMs) Thread.yield();
+            else try {
+                Thread.sleep(tickMs - adj);
             } catch (InterruptedException ignored) {
             }
         }
     }
 
     public void forceRepaint() {
+        root.invalidatePaint();
         repaint();
         serviceRepaints();
     }
 
     protected void sizeChanged(int w, int h) {
         root.invalidateLayout();
+        root.measure(w, h);
+        root.setCalculatedRect(0, 0, w, h);
+        root.layout();
+        forceRepaint();
     }
 
     public void paint(Graphics g) {
